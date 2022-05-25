@@ -4,6 +4,7 @@ import sys
 import pygame
 from settings import Settings
 from ship import Ship
+from bullet import Bullet
 # The following allows you to play in fullscreen
 # self.screen = pygame.display.set_mode(
 #     (0,0), pygame.FULLSCREEN)
@@ -17,6 +18,8 @@ class AlienInvasion:
         pygame.init()
 
         self.settings = Settings()
+        # A Group() is a with added functionality
+        self.bullets = pygame.sprite.Group()
         # Each asset has its own surface which is just a pygame.display the one 
         #   defined below is the surface for the whole game 
         # Creates screen with custom size and lets us use it for the other methods
@@ -33,6 +36,7 @@ class AlienInvasion:
         while True:
             self._check_events()
             self._update_screen()
+            self.bullets.update()
             self.ship.update()
 
 
@@ -41,6 +45,8 @@ class AlienInvasion:
         # Changes background color during each pass of the for loop
         self.screen.fill(self.settings.bg_color)
         self.ship.blitme()
+        for bullet in self.bullets.sprites():
+            bullet.draw_bullet()
         
 
         # Makes the most up to date screen visible
@@ -68,6 +74,8 @@ class AlienInvasion:
             self.ship.moving_down = True
         elif event.key == pygame.K_w:
             self.ship.moving_up = True
+        elif event.key == pygame.K_SPACE:
+            self._fire_bullet()
         elif event.key == pygame.K_q:
             sys.exit()
 
@@ -82,6 +90,11 @@ class AlienInvasion:
             self.ship.moving_down = False
         elif event.key == pygame.K_w:
             self.ship.moving_up = False
+
+    def _fire_bullet(self):
+        '''Adds bullets to the group'''
+        new_bullet = Bullet(self)
+        self.bullets.add(new_bullet)
 
             
                     
