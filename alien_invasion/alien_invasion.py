@@ -27,17 +27,26 @@ class AlienInvasion:
     def run_game(self):
         '''Creates main loop for game'''
         while True:
-            # Watches keyboard and mouse actions
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit()
-            
-            # Changes background color during each pass of the for loop
-            self.screen.fill(self.settings.bg_color)
-            self.ship.blitme()
+            self._check_events()
+            self.update_screen()
 
-            # Makes the most up to date screen visible
-            pygame.display.flip()
+
+    def update_screen(self):
+        # Changes background color during each pass of the for loop
+        self.screen.fill(self.settings.bg_color)
+        self.ship.blitme()
+
+        # Makes the most up to date screen visible
+        pygame.display.flip()
+
+
+    # Using a single leading underscore marks the method/vairable/function as a weak private
+    def _check_events(self):
+        # Watches keyboard and mouse actions
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            
 
 # Using the if statement below; the game will only run if the alien_invasion.py 
 #  file is called (ran) directly
