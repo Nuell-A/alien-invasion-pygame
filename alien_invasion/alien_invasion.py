@@ -5,11 +5,14 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from alien import Alien
+
 # The following allows you to play in fullscreen
 # self.screen = pygame.display.set_mode(
 #     (0,0), pygame.FULLSCREEN)
 # self.screen_width = self.screen.get_rect().width
 # self.screen_height = self.screen.get_rect().height
+
 class AlienInvasion:
     '''Class to manage overall game assets and behaviors'''
 
@@ -18,27 +21,52 @@ class AlienInvasion:
         pygame.init()
 
         self.settings = Settings()
-        # A Group() is a with added functionality
+        # A Group() is a list with added functionality
         self.bullets = pygame.sprite.Group()
-        # Each asset has its own surface which is just a pygame.display the one 
-        #   defined below is the surface for the whole game 
-        # Creates screen with custom size and lets us use it for the other methods
-        self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
-        # Sets name of the window that appears
+        self.aliens = pygame.sprite.Group()
+        # Every object has its own surface (rect/display), we can also create our own surface
+        self.screen = pygame.display.set_mode((self.settings.screen_width, 
+            self.settings.screen_height))
         pygame.display.set_caption("Forisha sucks pp")
 
-        # Calls ship.py and gives self as an instance
+        # Calls other modules and passes 'self' to create an instance of itself in the the other modules
         self.ship = Ship(self)
-        
+        self._create_fleet()
 
     def run_game(self):
         '''Creates main loop for game'''
         while True:
             self._check_events()
-            self._update_screen()
-            self.bullets.update()
             self.ship.update()
+            self._update_bullets()
+            self._update_screen()
 
+    def _create_fleet(self):
+        '''Create the fleet of aliens'''
+        # Find out how many aliens fit in one screen with one aliens width between them
+        alien = Alien(self)
+        alien_width = alien.rect.width
+        available_space_x = self.settings.screen_width - (2 * alien_width)
+        number_aliens_x = available_space_x // (2 * alien_width)
+
+        # Create row of aliens
+        for alien_number in range(number_aliens_x):
+            alien = Alien(self)
+            alien.x = alien_width + 2 * alien_width * alien_number
+            alien.rect.x = alien.x
+            self.aliens.add(alien)            
+
+    def _update_bullets(self):
+        self.bullets.update()
+        for bullet in self.bullets.copy():
+            if bullet.rect.bottom <= 0:
+                self.bullets.remove(bullet)
+
+    def _fire_bullet(self):
+        '''Adds bullets to the group'''
+        if len(self.bullets) < self.settings.bullets_allowed:
+            new_bullet = Bullet(self)
+            self.bullets.add(new_bullet)
 
     def _update_screen(self):
         '''Updates game screen'''
@@ -47,7 +75,7 @@ class AlienInvasion:
         self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
-        
+        self.aliens.draw(self.screen)
 
         # Makes the most up to date screen visible
         pygame.display.flip()
@@ -91,13 +119,6 @@ class AlienInvasion:
         elif event.key == pygame.K_w:
             self.ship.moving_up = False
 
-    def _fire_bullet(self):
-        '''Adds bullets to the group'''
-        new_bullet = Bullet(self)
-        self.bullets.add(new_bullet)
-
-            
-                    
             
 
 # Using the if statement below; the game will only run if the alien_invasion.py 

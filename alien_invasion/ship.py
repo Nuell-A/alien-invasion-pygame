@@ -43,8 +43,6 @@ class Ship:
         self.rect.y = self.y
         
         
-
-
     def blitme(self):
         '''Draws the ship at its current location'''
         self.screen.blit(self.image, self.rect)
