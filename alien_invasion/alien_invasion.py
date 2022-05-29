@@ -9,6 +9,8 @@ from bullet import Bullet
 from alien import Alien
 from time import sleep
 from game_stats import GameStats
+from button import Button
+from scoreboard import Scoreboard
 
 # The following allows you to play in fullscreen
 # self.screen = pygame.display.set_mode(
@@ -37,6 +39,8 @@ class AlienInvasion:
         # Calls other modules and passes 'self' to create an instance of itself in the the other modules
         self.ship = Ship(self)
         self._create_fleet()
+        self.play_button = Button(self, 'Play')
+        self.scoreboard = Scoreboard(self)
 
     def _update_screen(self):
         '''Updates game screen'''
@@ -46,6 +50,11 @@ class AlienInvasion:
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
+        self.scoreboard.show_score()
+
+        # Draws button if game is inactive
+        if not self.game_stats.game_active:
+            self.play_button.draw_button()
         
         # Makes the most up to date screen visible
         pygame.display.flip()
@@ -83,7 +92,7 @@ class AlienInvasion:
     def _ship_hit(self):
         '''When ship gets hit; gets rid of aliens, bullets and re-centers ship. 
         Also pauses the game for 0.5 secs'''
-        if self.settings.ship_limit > 0:
+        if self.game_stats.ships_left > 0:
             # Empties sprites
             self.bullets.empty()
             self.aliens.empty()
@@ -92,11 +101,12 @@ class AlienInvasion:
             self._create_fleet()
             self.ship.center_ship()
             # Decrements ship lives
-            self.settings.ship_limit -= 1
+            self.game_stats.ships_left -= 1
             # Pauses
             sleep(0.5)
         else:
             self.game_stats.game_active = False
+            pygame.mouse.set_visible(True)
 
     def _check_fleet_edges(self):
         for alien in self.aliens.sprites():
@@ -149,10 +159,16 @@ class AlienInvasion:
         # Adds collision between to sprites. True makes it so that those objects disappear
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, True, True)
 
+        if collisions:
+            for aliens in collisions.values():
+                self.game_stats.score += self.settings.alien_points * len(aliens)
+            self.scoreboard.prep_score()
+
         # Checks if alien fleet is destroyed and creates new one while emptying the bullet list.
         if not self.aliens:
             self.bullets.empty()
             self._create_fleet()
+            self.settings.increase_speed()
 
     def _fire_bullet(self):
         '''Adds bullets to the group'''
@@ -170,6 +186,30 @@ class AlienInvasion:
                 self._keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
+
+    def _check_play_button(self, mouse_pos):
+        '''Starts new game when player clicks play'''
+        button_clicked = self.play_button.rect.collidepoint(mouse_pos)
+        if button_clicked and not self.game_stats.game_active:
+            # Resets dynamic settings and starts the game
+            self.settings.dynamic_settings()
+            self.game_stats.reset_stats()
+            self.game_stats.game_active = True
+
+            # Gets rid of aliens and bullets
+            self.aliens.empty()
+            self.bullets.empty()
+
+            # Creates new fleet and centers ship
+            self._create_fleet()
+            self.ship.center_ship()
+
+            self.scoreboard.prep_score()
+
+            pygame.mouse.set_visible(False)
 
     def _keydown_events(self, event):
         '''Tracks key presses'''
