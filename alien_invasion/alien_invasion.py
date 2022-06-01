@@ -102,6 +102,7 @@ class AlienInvasion:
             self.ship.center_ship()
             # Decrements ship lives
             self.game_stats.ships_left -= 1
+            self.scoreboard.prep_ships()
             # Pauses
             sleep(0.5)
         else:
@@ -163,12 +164,16 @@ class AlienInvasion:
             for aliens in collisions.values():
                 self.game_stats.score += self.settings.alien_points * len(aliens)
             self.scoreboard.prep_score()
+            self.scoreboard.check_high_score()
 
         # Checks if alien fleet is destroyed and creates new one while emptying the bullet list.
         if not self.aliens:
             self.bullets.empty()
             self._create_fleet()
             self.settings.increase_speed()
+            # Increases level
+            self.game_stats.level += 1
+            self.scoreboard.prep_level()
 
     def _fire_bullet(self):
         '''Adds bullets to the group'''
@@ -208,6 +213,8 @@ class AlienInvasion:
             self.ship.center_ship()
 
             self.scoreboard.prep_score()
+            self.scoreboard.prep_level()
+            self.scoreboard.prep_ships()
 
             pygame.mouse.set_visible(False)
 

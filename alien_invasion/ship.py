@@ -1,9 +1,11 @@
 import pygame
+from pygame.sprite import Sprite
 
-class Ship:
+class Ship(Sprite):
     '''This class will handle the ships functions'''
     def __init__(self, ai_game): # ai_game would be an instance of AlienInvasion
         '''Initialize ship and set its starting position'''
+        super().__init__()
         self.screen = ai_game.screen 
         self.screen_rect = ai_game.screen.get_rect()
         self.settings = ai_game.settings
